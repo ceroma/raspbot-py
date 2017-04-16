@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys
+import json
 import argparse
 
 from flask import Flask
@@ -26,6 +28,24 @@ def verify():
         abort(403)
 
     return request.args.get('hub.challenge')
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = json.loads(request.data)
+
+    # Make sure this is a page subscription
+    if data['object'] != 'page':
+        abort(400)
+
+    # Iterate over each entry - there may be multiple if batched
+    for entry in data['entry']:
+        for messaging in entry['messaging']:
+            if 'message' not in messaging:
+                continue
+            sys.stderr.write('Received message:\n')
+            sys.stderr.write(str(messaging) + '\n')
+
+    return ""
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
