@@ -9,8 +9,13 @@ from flask import Flask
 from flask import abort
 from flask import request
 
+from sense_hat import SenseHat
+
 # Init Flask
 app = Flask(__name__)
+
+# Init SenseHat
+sense = SenseHat()
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser()
@@ -57,11 +62,39 @@ def handle_message(message):
     if 'message' in message and 'text' in message['message']:
         text = message['message']['text']
 
+    outgoing = ''
     text_lower = text.lower()
     if 'hi' in text_lower or 'hello' in text_lower:
-        send_message(sender_id, 'Hello, human!')
-    else:
-        send_message(sender_id, 'I don\'t understand that...')
+        outgoing += 'Hello, human!\n'
+    if 'temperature' in text_lower:
+        outgoing += 'The current temperature is '
+        outgoing += '{0:.2f} degrees Celsius\n'.format(sense.get_temperature())
+    if 'pressure' in text_lower:
+        outgoing += 'The current pressure is '
+        outgoing += '{0:.2f} millibars\n'.format(sense.get_pressure())
+    if 'humidity' in text_lower:
+        outgoing += 'The percentage of relative humidity is '
+        outgoing += '{0:.2f}%\n'.format(sense.get_humidity())
+    if 'compass' in text_lower:
+        outgoing += 'My angular distance to North, in degrees, is: '
+        outgoing += '{0:.2f}'.format(sense.get_compass())
+    if 'orientation' in text_lower:
+        orientation = sense.get_orientation()
+        outgoing += 'My current orientation, in degrees, is:\n'
+        outgoing += 'Pitch: {0:.2f}, '.format(orientation['pitch'])
+        outgoing += 'Roll: {0:.2f}, '.format(orientation['roll'])
+        outgoing += 'Yaw: {0:.2f}'.format(orientation['yaw'])
+    if 'acceleration' in text_lower:
+        acceleration = sense.get_accelerometer_raw()
+        outgoing += 'My current acceleration, in Gs, is:\n'
+        outgoing += 'X: {0:.2f}, '.format(acceleration['x'])
+        outgoing += 'Y: {0:.2f}, '.format(acceleration['y'])
+        outgoing += 'Z: {0:.2f}'.format(acceleration['z'])
+
+    if len(outgoing) == 0:
+        outgoing = 'I don\'t understand that...'
+
+    send_message(sender_id, outgoing)
 
 # Webhook verification
 @app.route('/webhook', methods=['GET'])
