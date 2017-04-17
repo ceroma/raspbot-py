@@ -1,1 +1,5 @@
-A simple Messenger bot that interacts with a Raspberry Pi.
+Raspbot Py
+----------
+
+A simple Messenger bot running on a Raspberry Pi that interacts with the
+attached Sense HAT's sensors and LED matrix.
