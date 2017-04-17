@@ -47,6 +47,22 @@ def send_message(recipient_id, message):
         res.reason,
         res.text))
 
+# Handle incoming messages and try to find the best response
+def handle_message(message):
+    logger.info('Received message:')
+    logger.info(message)
+
+    sender_id = message['sender']['id']
+    text = ''
+    if 'message' in message and 'text' in message['message']:
+        text = message['message']['text']
+
+    text_lower = text.lower()
+    if 'hi' in text_lower or 'hello' in text_lower:
+        send_message(sender_id, 'Hello, human!')
+    else:
+        send_message(sender_id, 'I don\'t understand that...')
+
 # Webhook verification
 @app.route('/webhook', methods=['GET'])
 def verify():
@@ -72,9 +88,7 @@ def webhook():
         for messaging in entry['messaging']:
             if 'message' not in messaging:
                 continue
-            logger.info('Received message:')
-            logger.info(str(messaging))
-            send_message(messaging['sender']['id'], 'Hello, human!')
+            handle_message(messaging)
 
     return ""
 
