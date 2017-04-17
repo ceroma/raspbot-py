@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import sys
 import json
+import logging
 import argparse
 
 from flask import Flask
@@ -17,6 +17,13 @@ parser.add_argument(
     'verify_token',
     help='token that Facebook will pass to the webhook for verification')
 args = parser.parse_args()
+
+# Configure logger
+LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, filename='bot.log')
+logging.getLogger().addHandler(logging.StreamHandler())
+logger = logging.getLogger('raspbot')
+logger.setLevel(logging.DEBUG)
 
 # Webhook verification
 @app.route('/webhook', methods=['GET'])
@@ -42,8 +49,8 @@ def webhook():
         for messaging in entry['messaging']:
             if 'message' not in messaging:
                 continue
-            sys.stderr.write('Received message:\n')
-            sys.stderr.write(str(messaging) + '\n')
+            logger.info('Received message:')
+            logger.info(str(messaging))
 
     return ""
 
