@@ -64,7 +64,7 @@ def handle_message(message):
 
     outgoing = ''
     text_lower = text.lower()
-    if 'hi' in text_lower or 'hello' in text_lower:
+    if 'hi' in text_lower or 'hello' in text_lower or 'hey' in text_lower:
         outgoing += 'Hello, human!\n'
     if 'temperature' in text_lower:
         outgoing += 'The current temperature is '
@@ -90,6 +90,10 @@ def handle_message(message):
         outgoing += 'X: {0:.2f}, '.format(acceleration['x'])
         outgoing += 'Y: {0:.2f}, '.format(acceleration['y'])
         outgoing += 'Z: {0:.2f}'.format(acceleration['z'])
+    if text_lower[:4] == 'say ':
+        text_to_say = text_lower[4:]
+        outgoing = 'Ok, I\'m writing "{}" on my LED matrix!'.format(text_to_say)
+        sense.show_message(text_to_say)
 
     if len(outgoing) == 0:
         outgoing = 'I don\'t understand that...'
