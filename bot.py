@@ -3,6 +3,7 @@
 import json
 import logging
 import argparse
+import requests
 
 from flask import Flask
 from flask import abort
@@ -16,6 +17,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     'verify_token',
     help='token that Facebook will pass to the webhook for verification')
+parser.add_argument(
+    'page_access_token',
+    help='the Page\'s access token to be used in the outgoing API calls')
 args = parser.parse_args()
 
 # Configure logger
@@ -24,6 +28,24 @@ logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, filename='bot.log')
 logging.getLogger().addHandler(logging.StreamHandler())
 logger = logging.getLogger('raspbot')
 logger.setLevel(logging.DEBUG)
+
+# Send a message on behalf of the page
+def send_message(recipient_id, message):
+    message_data = {}
+    message_data['message'] = {'text': message}
+    message_data['recipient'] = {'id': recipient_id}
+
+    logger.info('Sending message:')
+    logger.info(str(message_data))
+
+    url = 'https://graph.facebook.com/v2.6/me/messages'
+    parms = {'access_token': args.page_access_token}
+    res = requests.post(url, params=parms, json=message_data)
+
+    logger.info('Server response: {} - {} - {}'.format(
+        res.status_code,
+        res.reason,
+        res.text))
 
 # Webhook verification
 @app.route('/webhook', methods=['GET'])
@@ -36,6 +58,7 @@ def verify():
 
     return request.args.get('hub.challenge')
 
+# Handle incoming messages
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = json.loads(request.data)
@@ -51,6 +74,7 @@ def webhook():
                 continue
             logger.info('Received message:')
             logger.info(str(messaging))
+            send_message(messaging['sender']['id'], 'Hello, human!')
 
     return ""
 
